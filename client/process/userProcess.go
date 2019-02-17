@@ -1,6 +1,7 @@
 package process
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -224,6 +225,8 @@ func ShowOnlineUsers(msg *message.Message) {
 
 // ShowUserMenu shows the menu after user has logined in.
 func ShowUserMenu(userID int64, userName string, conn net.Conn) {
+	// reader用于读取字符串
+	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("----------1. 获取在线用户列表----------")
 		fmt.Println("----------2. 群聊----------")
@@ -233,7 +236,6 @@ func ShowUserMenu(userID int64, userName string, conn net.Conn) {
 		var key int
 		fmt.Scanf("%d\n", &key)
 
-		var content string
 		var userID int64
 
 		switch key {
@@ -245,10 +247,14 @@ func ShowUserMenu(userID int64, userName string, conn net.Conn) {
 		case 2:
 			fmt.Println("----------群聊----------")
 			fmt.Println("请输入群聊信息：")
-			fmt.Scanf("%s\n", &content)
+			content, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("input group chat content err: %v", err)
+				continue
+			}
 			content = userName + ": " + content
 
-			err := SendGrpSmsMsg(conn, content)
+			err = SendGrpSmsMsg(conn, content)
 			if err != nil {
 				log.Printf("SendGrpSmsMsg err: %s\n", err)
 			}
@@ -258,10 +264,14 @@ func ShowUserMenu(userID int64, userName string, conn net.Conn) {
 			fmt.Scanf("%d\n", &userID)
 
 			fmt.Println("请输入私聊信息：")
-			fmt.Scanf("%s\n", &content)
+			content, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("input private chat content err: %v", err)
+				continue
+			}
 			content = userName + ": " + content
 
-			err := SendSmsMsg(conn, userID, content)
+			err = SendSmsMsg(conn, userID, content)
 			if err != nil {
 				log.Printf("SendSmsMsg err: %s\n", err)
 			}
